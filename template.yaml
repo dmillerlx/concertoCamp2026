@@ -1,0 +1,191 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Concerto Camp 2026 - Student Schedule Viewer
+
+Parameters:
+  DeployBucketName:
+    Type: String
+    Description: S3 bucket containing Lambda zip package
+  ApiHandlerZipKey:
+    Type: String
+    Default: concertocamp-api.zip
+  UploadPassword:
+    Type: String
+    Default: campschedule
+    NoEcho: true
+
+Resources:
+
+  # ── S3 Buckets ────────────────────────────────────────────────────────────────
+
+  WebsiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: index.html
+
+  WebsiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref WebsiteBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action: s3:GetObject
+            Resource: !Sub '${WebsiteBucket.Arn}/*'
+
+  DataBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+      CorsConfiguration:
+        CorsRules:
+          - AllowedOrigins: ['*']
+            AllowedMethods: [GET, HEAD]
+            AllowedHeaders: ['*']
+            MaxAge: 3600
+
+  DataBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref DataBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action: s3:GetObject
+            Resource:
+              - !Sub '${DataBucket.Arn}/schedule.json'
+              - !Sub '${DataBucket.Arn}/schedule.pdf'
+
+  # ── SSM Parameters ────────────────────────────────────────────────────────────
+
+  UploadPasswordParam:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /concertocamp/upload_password
+      Type: String
+      Value: !Ref UploadPassword
+
+  # ── IAM Role ──────────────────────────────────────────────────────────────────
+
+  ApiHandlerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: concertocamp-api-handler-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: ConcertoCampApiPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                Resource: !Sub '${DataBucket.Arn}/*'
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/concertocamp/*'
+
+  # ── Lambda Function ───────────────────────────────────────────────────────────
+
+  ApiHandlerFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: concertocamp-api-handler
+      Runtime: python3.12
+      Handler: handler.lambda_handler
+      Role: !GetAtt ApiHandlerRole.Arn
+      Timeout: 120
+      MemorySize: 512
+      Code:
+        S3Bucket: !Ref DeployBucketName
+        S3Key: !Ref ApiHandlerZipKey
+      Environment:
+        Variables:
+          DATA_BUCKET: !Ref DataBucket
+
+  # ── API Gateway (HTTP API v2) ─────────────────────────────────────────────────
+
+  ConcertoCampApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: concertocamp-api
+      ProtocolType: HTTP
+      CorsConfiguration:
+        AllowOrigins:
+          - '*'
+        AllowMethods:
+          - POST
+          - OPTIONS
+        AllowHeaders:
+          - Content-Type
+
+  ApiIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref ConcertoCampApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !GetAtt ApiHandlerFunction.Arn
+      PayloadFormatVersion: '2.0'
+
+  RouteUpload:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref ConcertoCampApi
+      RouteKey: 'POST /upload'
+      Target: !Sub 'integrations/${ApiIntegration}'
+
+  ApiStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref ConcertoCampApi
+      StageName: $default
+      AutoDeploy: true
+
+  ApiLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt ApiHandlerFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ConcertoCampApi}/*'
+
+Outputs:
+  WebsiteUrl:
+    Description: Website URL
+    Value: !GetAtt WebsiteBucket.WebsiteURL
+
+  ApiUrl:
+    Description: API Gateway URL
+    Value: !Sub 'https://${ConcertoCampApi}.execute-api.${AWS::Region}.amazonaws.com'
+
+  WebsiteBucketName:
+    Description: S3 bucket for website
+    Value: !Ref WebsiteBucket
+
+  DataBucketName:
+    Description: S3 bucket for schedule data
+    Value: !Ref DataBucket

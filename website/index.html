@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Concerto Camp 2026 — Schedule</title>
+<style>
+  :root {
+    --c-class:    #3B82F6;
+    --c-lesson:   #8B5CF6;
+    --c-coaching: #8B5CF6;
+    --c-rehearsal:#10B981;
+    --c-recital:  #F59E0B;
+    --c-concert:  #EF4444;
+    --c-practice: #6B7280;
+    --bg: #F8FAFC;
+    --surface: #fff;
+    --border: #E2E8F0;
+    --text: #0F172A;
+    --muted: #64748B;
+    --header-h: 84px;
+    --nav-h: 52px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: #1E3A5F;
+    color: #fff;
+    height: var(--header-h);
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    align-content: center;
+    gap: 4px 12px;
+    padding: 8px 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.25);
+  }
+  header h1 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    white-space: nowrap;
+    flex: 1 1 100%;  /* full-width first row on mobile */
+  }
+  @media (min-width: 480px) {
+    :root { --header-h: 56px; }
+    header h1 { font-size: 1.1rem; flex: 0 0 auto; }  /* back to single row */
+  }
+
+  #student-select {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: none;
+    font-size: 0.95rem;
+    background: rgba(255,255,255,.15);
+    color: #fff;
+    cursor: pointer;
+    max-width: 280px;
+  }
+  @media (max-width: 479px) {
+    #student-select { max-width: none; }
+  }
+  #student-select option { color: #000; background: #fff; }
+  #student-select:focus { outline: 2px solid rgba(255,255,255,.5); }
+
+  /* ── Date nav ── */
+  #date-nav {
+    position: sticky;
+    top: var(--header-h);
+    z-index: 90;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    height: var(--nav-h);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 8px;
+    gap: 4px;
+  }
+  .nav-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    color: var(--text);
+    flex: 0 0 auto;
+  }
+  .nav-btn:hover { background: var(--bg); }
+  .nav-btn:disabled { opacity: .35; cursor: default; }
+
+  #date-label {
+    text-align: center;
+    flex: 1;
+    font-weight: 700;
+    font-size: 1rem;
+  }
+  #today-btn {
+    font-size: 0.8rem;
+    padding: 5px 10px;
+    background: #1E3A5F;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex: 0 0 auto;
+  }
+  #today-btn:hover { background: #274d7a; }
+  #today-btn.hidden { visibility: hidden; }
+  #time-format-btn {
+    font-size: 0.75rem;
+    padding: 4px 9px;
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex: 0 0 auto;
+  }
+  #time-format-btn:hover { background: var(--bg); color: var(--text); }
+
+  #print-btn {
+    flex: 0 0 auto;
+    background: rgba(255,255,255,.15);
+    border: 1px solid rgba(255,255,255,.35);
+    color: #fff;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  #print-btn:hover { background: rgba(255,255,255,.27); }
+  #print-btn:disabled { opacity: .5; cursor: default; }
+
+  /* ── Main content ── */
+  main {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 16px 12px 120px;
+  }
+
+  /* ── Countdown / empty ── */
+  .notice {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--muted);
+  }
+  .notice .big { font-size: 2.5rem; font-weight: 800; color: var(--text); }
+  .notice p { margin-top: 8px; font-size: 0.95rem; }
+
+  /* ── Event card ── */
+  .event-card {
+    background: var(--surface);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    display: grid;
+    grid-template-columns: 5px 1fr;
+    gap: 0 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.05);
+  }
+  .card-stripe {
+    border-radius: 4px;
+    grid-row: 1 / span 4;
+  }
+  .card-time {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: .3px;
+  }
+  .card-title {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    padding: 2px 7px;
+    border-radius: 99px;
+    color: #fff;
+    white-space: nowrap;
+  }
+  .card-meta {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-top: 4px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .card-meta span::before { content: ''; }
+  .card-repertoire {
+    font-size: 0.82rem;
+    color: #475569;
+    margin-top: 5px;
+    font-style: italic;
+  }
+
+  /* ── Footer ── */
+  footer {
+    position: fixed;
+    bottom: 0;
+    left: 0; right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 8px 16px 10px;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+  .footer-disclaimer {
+    position: relative;
+    line-height: 1.45;
+    margin-bottom: 6px;
+    padding: 6px 28px 6px 10px;
+    background: #FFFBEB;
+    border-left: 3px solid #F59E0B;
+    border-radius: 0 4px 4px 0;
+    color: #78350F;
+  }
+  .footer-disclaimer a {
+    color: #92400E;
+    text-decoration: underline;
+  }
+  .footer-disclaimer a:hover { color: #1E3A5F; }
+  .footer-disclaimer.collapsed { display: none; }
+  #last-updated { display: block; margin-top: 3px; font-style: italic; color: #A16207; }
+  .disclaimer-toggle {
+    position: absolute;
+    top: 6px; right: 6px;
+    background: none;
+    border: none;
+    color: #A16207;
+    cursor: pointer;
+    font-size: 0.8rem;
+    padding: 0;
+    line-height: 1;
+    text-decoration: none;
+  }
+  .disclaimer-toggle:hover { color: #78350F; }
+  .footer-links {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .footer-links a {
+    color: var(--muted);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .footer-links a:hover { color: var(--text); text-decoration: underline; }
+  footer button {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 0.75rem;
+    text-decoration: underline;
+    padding: 0;
+    white-space: nowrap;
+  }
+  footer button:hover { color: var(--text); }
+  .show-disclaimer-btn { display: none; text-decoration: none; }
+  .show-disclaimer-btn.visible { display: inline; }
+
+  /* ── Contact popup ── */
+  .contact-popup {
+    position: fixed;
+    right: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    max-width: 280px;
+    box-shadow: 0 4px 20px rgba(0,0,0,.15);
+    font-size: 0.85rem;
+    z-index: 150;
+    line-height: 1.4;
+  }
+  .contact-popup.hidden { display: none; }
+  .contact-popup a { color: #1E3A5F; }
+  .contact-note { margin-top: 8px; font-size: 0.78rem; color: var(--muted); }
+
+  /* ── Upload modal ── */
+  .modal-bg {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.5);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .modal-bg.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 24px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.3);
+  }
+  .modal h2 { font-size: 1.1rem; margin-bottom: 16px; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; }
+  .field input[type=password], .field input[type=file] {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.95rem;
+  }
+  .field input[type=file] { padding: 6px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+  .btn { padding: 9px 18px; border-radius: 8px; border: none; font-size: 0.9rem; cursor: pointer; font-weight: 600; }
+  .btn-primary { background: #1E3A5F; color: #fff; }
+  .btn-primary:hover { background: #274d7a; }
+  .btn-primary:disabled { opacity: .5; cursor: default; }
+  .btn-ghost { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+  #upload-status { font-size: 0.85rem; margin-top: 10px; min-height: 20px; }
+  .status-ok  { color: #10B981; }
+  .status-err { color: #EF4444; }
+
+  /* ── Loading ── */
+  #loading {
+    text-align: center;
+    padding: 60px 24px;
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Concerto Camp Schedule</h1>
+  <select id="student-select">
+    <option value="">— Select your name —</option>
+  </select>
+  <button id="print-btn" title="Download your full 9-day schedule as a PDF">Download Schedule</button>
+</header>
+
+<div id="date-nav">
+  <button class="nav-btn" id="prev-btn" title="Previous day">&#8592;</button>
+  <div id="date-label">Loading…</div>
+  <button class="nav-btn" id="next-btn" title="Next day">&#8594;</button>
+  <button id="today-btn" class="hidden">Today</button>
+  <button id="time-format-btn" title="Toggle 12h / 24h time">12h</button>
+</div>
+
+<main id="main-content">
+  <div id="loading">Loading schedule…</div>
+</main>
+
+<footer>
+  <div class="footer-disclaimer" id="footer-disclaimer">
+    <button class="disclaimer-toggle" id="disclaimer-toggle" title="Minimize">▼</button>
+    Unofficial schedule viewer made by a camp participant. <strong>Not affiliated with The Concerto Camp.</strong>
+    Always verify dates, times, and locations against the <a href="__DATA_URL__/schedule.pdf" target="_blank" rel="noopener">official PDF</a> — they are subject to change and the camp's PDF is the authoritative source.
+    <span id="last-updated"></span>
+  </div>
+  <div class="footer-links">
+    <button class="show-disclaimer-btn" id="show-disclaimer" title="Show disclaimer">▲ Info</button>
+    <a href="https://theconcertocamp.com" target="_blank" rel="noopener">Official Site</a>
+    <a href="__DATA_URL__/schedule.pdf" target="_blank" rel="noopener">Download PDF</a>
+    <button id="contact-btn">Contact</button>
+    <button id="admin-btn">Admin</button>
+  </div>
+</footer>
+
+<div class="contact-popup hidden" id="contact-popup">
+  <strong>Questions about this site?</strong>
+  <div style="margin-top:8px"><a href="mailto:dustin@millernet.org">dustin@millernet.org</a></div>
+  <p class="contact-note">For questions about this unofficial schedule viewer only — not for camp registration or anything camp-related. For camp inquiries visit <a href="https://theconcertocamp.com" target="_blank" rel="noopener">theconcertocamp.com</a>.</p>
+</div>
+
+<div class="modal-bg" id="modal-bg">
+  <div class="modal">
+    <h2>Upload New Schedule PDF</h2>
+    <div class="field">
+      <label for="upload-password">Password</label>
+      <input type="password" id="upload-password" placeholder="Enter upload password" autocomplete="off">
+    </div>
+    <div class="field">
+      <label for="upload-file">PDF File</label>
+      <input type="file" id="upload-file" accept=".pdf,application/pdf">
+    </div>
+    <div id="upload-status"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="modal-cancel">Cancel</button>
+      <button class="btn btn-primary" id="upload-btn">Upload &amp; Parse</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_URL  = '__API_URL__';
+const DATA_URL = '__DATA_URL__';
+const SCHEDULE_URL = DATA_URL + '/schedule.json';
+
+const CAMP_START = '2026-07-06';
+const CAMP_END   = '2026-07-14';
+
+const TYPE_COLOR = {
+  class:    '#3B82F6',
+  lesson:   '#8B5CF6',
+  coaching: '#8B5CF6',
+  rehearsal:'#10B981',
+  recital:  '#F59E0B',
+  concert:  '#EF4444',
+  practice: '#6B7280',
+};
+const TYPE_LABEL = {
+  class:    'Class',
+  lesson:   'Lesson',
+  coaching: 'Coaching',
+  rehearsal:'Rehearsal',
+  recital:  'Recital',
+  concert:  'Concert',
+  practice: 'Practice',
+};
+
+const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+let schedule = null;
+let currentDate = null;
+let timeFormat = localStorage.getItem('concertocamp_time_format') || '12';
+
+// ── Utilities ────────────────────────────────────────────────────────────────
+
+function viennaToday() {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Vienna' });
+}
+
+function testDate() {
+  return new URLSearchParams(location.search).get('date');
+}
+
+function smartDefault() {
+  const d = testDate() || viennaToday();
+  if (d < CAMP_START) return CAMP_START;
+  if (d > CAMP_END)   return CAMP_END;
+  return d;
+}
+
+function isToday(date) {
+  return (testDate() || viennaToday()) === date;
+}
+
+function dateLabel(iso) {
+  const [y, m, d] = iso.split('-').map(Number);
+  const jsDate = new Date(y, m - 1, d);
+  return `${DAY_NAMES[jsDate.getDay()]}, ${MONTH_NAMES[m-1]} ${d}`;
+}
+
+function fmtTime(t) {
+  const [h, min] = t.split(':');
+  if (timeFormat === '24') return `${h}:${min}`;
+  const hr = parseInt(h);
+  const suffix = hr >= 12 ? 'pm' : 'am';
+  const hr12 = hr > 12 ? hr - 12 : hr === 0 ? 12 : hr;
+  return `${hr12}:${min}${suffix}`;
+}
+
+function daysUntilCamp() {
+  const today = new Date(viennaToday());
+  const start = new Date(CAMP_START);
+  return Math.ceil((start - today) / 86400000);
+}
+
+function daysAfterCamp() {
+  const today = new Date(viennaToday());
+  const end   = new Date(CAMP_END);
+  return Math.ceil((today - end) / 86400000);
+}
+
+// ── Load schedule ────────────────────────────────────────────────────────────
+
+async function loadSchedule() {
+  try {
+    const resp = await fetch(SCHEDULE_URL + '?t=' + Date.now());
+    if (!resp.ok) throw new Error('Not found');
+    schedule = await resp.json();
+    updateLastUpdated(schedule.generatedAt);
+    populateStudentSelect();
+    restoreStudent();
+    render();
+  } catch (e) {
+    document.getElementById('main-content').innerHTML =
+      `<div class="notice"><p>No schedule loaded yet. Use Admin → Upload PDF to get started.</p></div>`;
+  }
+}
+
+// ── Student selector ─────────────────────────────────────────────────────────
+
+function populateStudentSelect() {
+  const sel = document.getElementById('student-select');
+  sel.innerHTML = '<option value="">— Select your name —</option>';
+  const groups = { A:[], B:[], C:[], D:[] };
+  for (const s of schedule.students) groups[s.group].push(s);
+  for (const g of ['A','B','C','D']) {
+    const opt = document.createElement('optgroup');
+    opt.label = 'Group ' + g;
+    for (const s of groups[g]) {
+      const o = document.createElement('option');
+      o.value = s.id;
+      o.textContent = s.id + ' — ' + s.name;
+      opt.appendChild(o);
+    }
+    sel.appendChild(opt);
+  }
+}
+
+function selectedStudent() {
+  const sid = document.getElementById('student-select').value;
+  if (!sid || !schedule) return null;
+  return schedule.students.find(s => s.id === sid) || null;
+}
+
+function restoreStudent() {
+  const saved = localStorage.getItem('concertocamp_student_id');
+  if (saved) document.getElementById('student-select').value = saved;
+}
+
+document.getElementById('student-select').addEventListener('change', () => {
+  const sid = document.getElementById('student-select').value;
+  if (sid) localStorage.setItem('concertocamp_student_id', sid);
+  render();
+});
+
+// ── Date navigation ──────────────────────────────────────────────────────────
+
+function setupDateNav() {
+  currentDate = smartDefault();
+
+  document.getElementById('prev-btn').addEventListener('click', () => {
+    if (currentDate > CAMP_START) {
+      const d = new Date(currentDate);
+      d.setDate(d.getDate() - 1);
+      currentDate = d.toISOString().slice(0, 10);
+      render();
+    }
+  });
+
+  document.getElementById('next-btn').addEventListener('click', () => {
+    if (currentDate < CAMP_END) {
+      const d = new Date(currentDate);
+      d.setDate(d.getDate() + 1);
+      currentDate = d.toISOString().slice(0, 10);
+      render();
+    }
+  });
+
+  document.getElementById('today-btn').addEventListener('click', () => {
+    currentDate = smartDefault();
+    render();
+  });
+}
+
+// ── Render ───────────────────────────────────────────────────────────────────
+
+function render() {
+  const main   = document.getElementById('main-content');
+  const label  = document.getElementById('date-label');
+  const todBtn = document.getElementById('today-btn');
+  const prevBtn = document.getElementById('prev-btn');
+  const nextBtn = document.getElementById('next-btn');
+
+  // Date label
+  label.textContent = dateLabel(currentDate);
+  prevBtn.disabled = currentDate <= CAMP_START;
+  nextBtn.disabled = currentDate >= CAMP_END;
+
+  // Today button visibility — only show during camp when not already on today
+  const smart = smartDefault();
+  const today = testDate() || viennaToday();
+  const duringCamp = today >= CAMP_START && today <= CAMP_END;
+  if (!duringCamp || currentDate === smart) {
+    todBtn.classList.add('hidden');
+  } else {
+    todBtn.classList.remove('hidden');
+    todBtn.textContent = 'Today';
+  }
+
+  if (!schedule) return;
+
+  const student = selectedStudent();
+  if (!student) {
+    main.innerHTML = `<div class="notice"><p>Select your name above to see your schedule.</p></div>`;
+    return;
+  }
+
+  const beforeCamp = today < CAMP_START;
+  const afterCamp  = today > CAMP_END;
+
+  // Countdown / ended banner (only when no URL override)
+  if (!testDate() && (beforeCamp || afterCamp)) {
+    if (beforeCamp) {
+      const days = daysUntilCamp();
+      main.innerHTML = `<div class="notice">
+        <div class="big">${days}</div>
+        <p>day${days===1?'':'s'} until Concerto Camp begins</p>
+        <p style="margin-top:20px;font-size:.8rem;color:#94a3b8">Showing schedule for ${dateLabel(currentDate)}</p>
+      </div>`;
+      // Fall through to show schedule below
+    } else {
+      main.innerHTML = `<div class="notice">
+        <p style="font-size:1.1rem;font-weight:700">Concerto Camp 2026 has ended.</p>
+        <p style="margin-top:8px">Showing schedule for ${dateLabel(currentDate)}</p>
+      </div>`;
+    }
+  }
+
+  const events = (student.events || []).filter(e => e.date === currentDate);
+
+  if (events.length === 0) {
+    if (testDate() || (!beforeCamp && !afterCamp)) {
+      main.innerHTML = `<div class="notice"><p>No events scheduled for ${student.name} on ${dateLabel(currentDate)}.</p></div>`;
+    }
+    return;
+  }
+
+  const cards = events.map(ev => {
+    const color = TYPE_COLOR[ev.type] || '#94A3B8';
+    const label = TYPE_LABEL[ev.type] || ev.type;
+    const timeStr = ev.endTime
+      ? `${fmtTime(ev.startTime)} – ${fmtTime(ev.endTime)}`
+      : fmtTime(ev.startTime);
+
+    let metaItems = [];
+    if (ev.location) metaItems.push(`📍 ${ev.location}`);
+    if (ev.teacher)  metaItems.push(`👤 ${ev.teacher}`);
+    if (ev.notes)    metaItems.push(`ℹ️ ${ev.notes}`);
+
+    const metaHtml = metaItems.length
+      ? `<div class="card-meta">${metaItems.map(m => `<span>${m}</span>`).join('')}</div>`
+      : '';
+
+    const repHtml = ev.repertoire
+      ? `<div class="card-repertoire">${escHtml(ev.repertoire)}</div>`
+      : '';
+
+    return `<div class="event-card">
+      <div class="card-stripe" style="background:${color}"></div>
+      <div class="card-time">${timeStr}</div>
+      <div class="card-title">
+        ${escHtml(ev.title)}
+        <span class="badge" style="background:${color}">${label}</span>
+      </div>
+      ${metaHtml}
+      ${repHtml}
+    </div>`;
+  }).join('');
+
+  const banner = (testDate() || (!beforeCamp && !afterCamp)) ? '' : main.innerHTML;
+  main.innerHTML = banner + cards;
+}
+
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// ── Admin / Upload modal ──────────────────────────────────────────────────────
+
+document.getElementById('admin-btn').addEventListener('click', () => {
+  document.getElementById('modal-bg').classList.add('open');
+  document.getElementById('upload-password').focus();
+  document.getElementById('upload-status').textContent = '';
+  document.getElementById('upload-status').className = '';
+  document.getElementById('upload-file').value = '';
+});
+
+document.getElementById('modal-cancel').addEventListener('click', closeModal);
+document.getElementById('modal-bg').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal-bg')) closeModal();
+});
+
+function closeModal() {
+  document.getElementById('modal-bg').classList.remove('open');
+}
+
+document.getElementById('upload-btn').addEventListener('click', async () => {
+  const password = document.getElementById('upload-password').value.trim();
+  const fileInput = document.getElementById('upload-file');
+  const statusEl = document.getElementById('upload-status');
+  const btn = document.getElementById('upload-btn');
+
+  if (!password) { showStatus('Enter the upload password.', false); return; }
+  if (!fileInput.files.length) { showStatus('Select a PDF file.', false); return; }
+
+  const file = fileInput.files[0];
+  if (!file.name.endsWith('.pdf') && file.type !== 'application/pdf') {
+    showStatus('Please select a PDF file.', false); return;
+  }
+
+  btn.disabled = true;
+  showStatus('Reading file…', null);
+
+  try {
+    const pdfBase64 = await fileToBase64(file);
+    showStatus('Uploading and parsing…', null);
+
+    const resp = await fetch(API_URL + '/upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password, pdf: pdfBase64 }),
+    });
+    const data = await resp.json();
+
+    if (resp.ok && data.success) {
+      showStatus(`Done! ${data.students} students, ${data.events} events parsed.`, true);
+      setTimeout(async () => {
+        closeModal();
+        await loadSchedule();
+      }, 1500);
+    } else {
+      showStatus(data.error || `Error ${resp.status}`, false);
+    }
+  } catch (e) {
+    showStatus('Network error: ' + e.message, false);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+function showStatus(msg, ok) {
+  const el = document.getElementById('upload-status');
+  el.textContent = msg;
+  el.className = ok === true ? 'status-ok' : ok === false ? 'status-err' : '';
+}
+
+function fileToBase64(file) {
+  return new Promise((res, rej) => {
+    const reader = new FileReader();
+    reader.onload = () => res(reader.result.split(',')[1]);
+    reader.onerror = rej;
+    reader.readAsDataURL(file);
+  });
+}
+
+// ── Time format toggle ────────────────────────────────────────────────────────
+
+const timeFormatBtn = document.getElementById('time-format-btn');
+timeFormatBtn.textContent = timeFormat === '12' ? '12h' : '24h';
+timeFormatBtn.addEventListener('click', () => {
+  timeFormat = timeFormat === '12' ? '24' : '12';
+  localStorage.setItem('concertocamp_time_format', timeFormat);
+  timeFormatBtn.textContent = timeFormat === '12' ? '12h' : '24h';
+  render();
+});
+
+// ── Last updated ─────────────────────────────────────────────────────────────
+
+function updateLastUpdated(ts) {
+  const el = document.getElementById('last-updated');
+  if (!el || !ts) return;
+  const d = new Date(ts);
+  const fmt = d.toLocaleString('en-US', {
+    month: 'short', day: 'numeric', year: 'numeric',
+    hour: 'numeric', minute: '2-digit',
+  });
+  el.textContent = 'Updated ' + fmt;
+}
+
+// ── Disclaimer collapse ───────────────────────────────────────────────────────
+
+const DISCLAIMER_KEY = 'concertocamp_disclaimer_collapsed';
+const disclaimerEl      = document.getElementById('footer-disclaimer');
+const disclaimerToggle  = document.getElementById('disclaimer-toggle');
+const showDisclaimerBtn = document.getElementById('show-disclaimer');
+
+function setDisclaimer(collapsed) {
+  disclaimerEl.classList.toggle('collapsed', collapsed);
+  showDisclaimerBtn.classList.toggle('visible', collapsed);
+  localStorage.setItem(DISCLAIMER_KEY, collapsed ? '1' : '0');
+}
+
+if (localStorage.getItem(DISCLAIMER_KEY) === '1') setDisclaimer(true);
+
+disclaimerToggle.addEventListener('click', () => setDisclaimer(true));
+showDisclaimerBtn.addEventListener('click', () => setDisclaimer(false));
+
+// ── Contact popup ─────────────────────────────────────────────────────────────
+
+const contactBtn   = document.getElementById('contact-btn');
+const contactPopup = document.getElementById('contact-popup');
+
+contactBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  const opening = contactPopup.classList.contains('hidden');
+  if (opening) {
+    contactPopup.style.bottom = (document.querySelector('footer').offsetHeight + 8) + 'px';
+  }
+  contactPopup.classList.toggle('hidden');
+});
+
+document.addEventListener('click', e => {
+  if (!contactPopup.classList.contains('hidden') &&
+      !contactPopup.contains(e.target) && e.target !== contactBtn) {
+    contactPopup.classList.add('hidden');
+  }
+});
+
+// ── Print / PDF ───────────────────────────────────────────────────────────────
+
+function printSchedule() {
+  const student = selectedStudent();
+  if (!student) { alert('Please select a student first.'); return; }
+  if (!schedule) return;
+
+  const btn = document.getElementById('print-btn');
+  btn.disabled = true;
+  btn.textContent = 'Generating…';
+
+  function generate() {
+    try {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'letter' });
+
+      const PW = 792, PH = 612;
+      const ML = 28, MT = 28;
+      const CW = PW - ML * 2;
+
+      // Title
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(13);
+      doc.setTextColor(30, 58, 95);
+      doc.text(student.id + ' — ' + student.name + ' — Concerto Camp 2026 Schedule', PW / 2, MT + 13, { align: 'center' });
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(100, 116, 139);
+      doc.text('July 6–14, 2026  ·  Vienna, Austria  ·  Participant ' + student.id + '  ·  Group ' + student.group, PW / 2, MT + 25, { align: 'center' });
+
+      // Grid layout
+      const GRID_Y = MT + 36;
+      const GRID_H = PH - MT - 28 - 36 - 14;
+      const GAP = 8;
+      const colW = (CW - 2 * GAP) / 3;
+      const rowH = (GRID_H - 2 * GAP) / 3;
+
+      const DAY_FULL  = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+      const MONTH_ABR = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+      const C = {
+        class:    [59, 130, 246],
+        lesson:   [139, 92, 246],
+        coaching: [139, 92, 246],
+        rehearsal:[16, 185, 129],
+        recital:  [245, 158, 11],
+        concert:  [239, 68, 68],
+        practice: [107, 114, 128],
+      };
+
+      // Build camp dates array
+      const dates = [];
+      let cur = new Date(CAMP_START + 'T00:00:00');
+      const endD = new Date(CAMP_END + 'T00:00:00');
+      while (cur <= endD) {
+        dates.push(cur.toISOString().slice(0, 10));
+        cur.setDate(cur.getDate() + 1);
+      }
+
+      const HDR_H = 17;
+      const EVT_PAD = 5;
+      const EVT_LINE = 15;
+
+      dates.forEach((date, i) => {
+        const col = i % 3;
+        const row = Math.floor(i / 3);
+        const bx = ML + col * (colW + GAP);
+        const by = GRID_Y + row * (rowH + GAP);
+
+        // Box background + border
+        doc.setDrawColor(210, 218, 230);
+        doc.setFillColor(255, 255, 255);
+        doc.roundedRect(bx, by, colW, rowH, 4, 4, 'FD');
+
+        // Day header bar (navy)
+        doc.setFillColor(30, 58, 95);
+        doc.roundedRect(bx, by, colW, HDR_H, 4, 4, 'F');
+        doc.rect(bx, by + HDR_H - 6, colW, 6, 'F'); // flatten bottom curve
+
+        const [yr, mo, dy] = date.split('-').map(Number);
+        const dow = new Date(yr, mo - 1, dy).getDay();
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.setTextColor(255, 255, 255);
+        doc.text(DAY_FULL[dow] + ', ' + MONTH_ABR[mo - 1] + ' ' + dy, bx + 7, by + HDR_H - 4);
+
+        // Events
+        const events = (student.events || []).filter(e => e.date === date);
+        let ey = by + HDR_H + EVT_PAD;
+        const maxY = by + rowH - 4;
+
+        if (events.length === 0) {
+          doc.setFont('helvetica', 'italic');
+          doc.setFontSize(7);
+          doc.setTextColor(180, 180, 180);
+          doc.text('No events', bx + 8, ey + 7);
+        } else {
+          for (const ev of events) {
+            if (ey + EVT_LINE > maxY) break;
+            const rgb = C[ev.type] || [148, 163, 184];
+            const timeStr = ev.endTime
+              ? fmtTime(ev.startTime) + '–' + fmtTime(ev.endTime)
+              : fmtTime(ev.startTime);
+
+            // Color dot
+            doc.setFillColor(...rgb);
+            doc.circle(bx + 9, ey + 4, 2.5, 'F');
+
+            // Time (small gray)
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(6.5);
+            doc.setTextColor(80, 95, 110);
+            doc.text(timeStr, bx + 15, ey + 6);
+
+            // Title (bold, truncated to fit)
+            const timeW = doc.getTextWidth(timeStr);
+            const titleX = bx + 15 + timeW + 3;
+            const maxTW = bx + colW - 5 - titleX;
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(7.5);
+            doc.setTextColor(15, 23, 42);
+            let title = ev.title;
+            while (title.length > 2 && doc.getTextWidth(title) > maxTW) title = title.slice(0, -1);
+            if (title !== ev.title) title = title.slice(0, -1) + '…';
+            doc.text(title, titleX, ey + 6);
+
+            // Location / teacher (second line, muted)
+            const metaParts = [];
+            if (ev.location) metaParts.push(ev.location);
+            if (ev.teacher)  metaParts.push(ev.teacher);
+            if (metaParts.length) {
+              doc.setFont('helvetica', 'normal');
+              doc.setFontSize(6);
+              doc.setTextColor(100, 116, 139);
+              let meta = metaParts.join('  ·  ');
+              const maxMW = colW - 14 - 4;
+              while (meta.length > 2 && doc.getTextWidth(meta) > maxMW) meta = meta.slice(0, -1);
+              if (meta !== metaParts.join('  ·  ')) meta = meta.slice(0, -1) + '…';
+              doc.text(meta, bx + 14, ey + 12.5);
+            }
+
+            ey += EVT_LINE;
+          }
+        }
+      });
+
+      // Legend
+      const LEG_Y = PH - 14;
+      const LEG_ITEMS = [
+        ['Class', C.class], ['Lesson/Coaching', C.lesson],
+        ['Rehearsal', C.rehearsal], ['Recital', C.recital],
+        ['Concert', C.concert], ['Practice', C.practice],
+      ];
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      let lx = ML;
+      for (const [lbl, rgb] of LEG_ITEMS) {
+        doc.setFillColor(...rgb);
+        doc.circle(lx + 4, LEG_Y - 3, 2.5, 'F');
+        doc.setTextColor(100, 116, 139);
+        doc.text(lbl, lx + 9, LEG_Y);
+        lx += doc.getTextWidth(lbl) + 20;
+      }
+
+      doc.save(student.id + ' - ' + student.name + ' - Concerto Camp 2026.pdf');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Download Schedule';
+    }
+  }
+
+  if (window.jspdf) {
+    generate();
+  } else {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    s.onload = generate;
+    s.onerror = () => {
+      alert('Could not load PDF library. Check your internet connection.');
+      btn.disabled = false;
+      btn.textContent = 'Download Schedule';
+    };
+    document.head.appendChild(s);
+  }
+}
+
+document.getElementById('print-btn').addEventListener('click', printSchedule);
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+
+setupDateNav();
+loadSchedule();
+</script>
+</body>
+</html>
