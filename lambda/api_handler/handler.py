@@ -5,6 +5,7 @@ import re
 import base64
 import io
 import logging
+import uuid
 from datetime import datetime
 
 import pdfplumber
@@ -16,6 +17,7 @@ s3 = boto3.client('s3')
 ssm = boto3.client('ssm')
 
 DATA_BUCKET = os.environ['DATA_BUCKET']
+CUSTOM_KEY  = 'custom_events.json'
 
 CAMP_DATES = [f'2026-07-{d:02d}' for d in range(6, 15)]
 
@@ -53,10 +55,82 @@ def lambda_handler(event, context):
     if method == 'OPTIONS':
         return {'statusCode': 200, 'headers': cors_headers(), 'body': ''}
 
-    if method == 'POST' and '/upload' in path:
+    if method == 'POST' and path == '/upload':
         return handle_upload(event)
 
+    if method == 'POST' and path == '/custom':
+        return handle_custom(event)
+
     return json_response(404, {'error': 'Not found'})
+
+
+# ── CUSTOM EVENTS ─────────────────────────────────────────────────────────────
+
+def get_custom_events():
+    try:
+        obj = s3.get_object(Bucket=DATA_BUCKET, Key=CUSTOM_KEY)
+        return json.loads(obj['Body'].read()).get('events', [])
+    except Exception:
+        return []
+
+
+def save_custom_events(events):
+    s3.put_object(
+        Bucket=DATA_BUCKET,
+        Key=CUSTOM_KEY,
+        Body=json.dumps({'events': events}, ensure_ascii=False, indent=2),
+        ContentType='application/json',
+    )
+
+
+def handle_custom(event):
+    try:
+        body_str = event.get('body', '{}') or '{}'
+        if event.get('isBase64Encoded'):
+            body_str = base64.b64decode(body_str).decode('utf-8')
+        body = json.loads(body_str)
+    except Exception as e:
+        return json_response(400, {'error': f'Invalid request: {e}'})
+
+    password = body.get('password', '')
+    action   = body.get('action', '')
+
+    if not password or action not in ('add', 'update', 'delete'):
+        return json_response(400, {'error': 'Missing password or invalid action'})
+
+    try:
+        param = ssm.get_parameter(Name='/concertocamp/upload_password')
+        expected = param['Parameter']['Value']
+    except Exception as e:
+        logger.error(f'SSM error: {e}')
+        return json_response(500, {'error': 'Server configuration error'})
+
+    if password != expected:
+        return json_response(401, {'error': 'Invalid password'})
+
+    events = get_custom_events()
+
+    if action == 'add':
+        ev = body.get('event', {})
+        ev['id'] = str(uuid.uuid4())[:8]
+        events.append(ev)
+
+    elif action == 'update':
+        ev = body.get('event', {})
+        ev_id = ev.get('id')
+        events = [e if e.get('id') != ev_id else ev for e in events]
+
+    elif action == 'delete':
+        ev_id = body.get('id', '')
+        events = [e for e in events if e.get('id') != ev_id]
+
+    try:
+        save_custom_events(events)
+    except Exception as e:
+        logger.error(f'S3 write error: {e}')
+        return json_response(500, {'error': 'Failed to save custom events'})
+
+    return json_response(200, {'success': True, 'events': events})
 
 
 def handle_upload(event):

@@ -69,6 +69,7 @@ Resources:
             Resource:
               - !Sub '${DataBucket.Arn}/schedule.json'
               - !Sub '${DataBucket.Arn}/schedule.pdf'
+              - !Sub '${DataBucket.Arn}/custom_events.json'
 
   # ── SSM Parameters ────────────────────────────────────────────────────────────
 
@@ -156,6 +157,13 @@ Resources:
     Properties:
       ApiId: !Ref ConcertoCampApi
       RouteKey: 'POST /upload'
+      Target: !Sub 'integrations/${ApiIntegration}'
+
+  RouteCustom:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref ConcertoCampApi
+      RouteKey: 'POST /custom'
       Target: !Sub 'integrations/${ApiIntegration}'
 
   ApiStage:

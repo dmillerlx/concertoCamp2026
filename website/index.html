@@ -330,7 +330,8 @@
   .modal h2 { font-size: 1.1rem; margin-bottom: 16px; }
   .field { margin-bottom: 14px; }
   .field label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; }
-  .field input[type=password], .field input[type=file] {
+  .field input[type=password], .field input[type=file],
+  .field input[type=text], .field input[type=time], .field select {
     width: 100%;
     padding: 8px 12px;
     border: 1px solid var(--border);
@@ -338,6 +339,8 @@
     font-size: 0.95rem;
   }
   .field input[type=file] { padding: 6px; }
+  .field input[type=time] { padding: 7px 10px; }
+  .field select { background: var(--surface); }
   .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
   .btn { padding: 9px 18px; border-radius: 8px; border: none; font-size: 0.9rem; cursor: pointer; font-weight: 600; }
   .btn-primary { background: #1E3A5F; color: #fff; }
@@ -347,6 +350,54 @@
   #upload-status { font-size: 0.85rem; margin-top: 10px; min-height: 20px; }
   .status-ok  { color: #10B981; }
   .status-err { color: #EF4444; }
+
+  /* ── Modal tabs ── */
+  .modal-tabs {
+    display: flex;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 16px;
+  }
+  .modal-tab {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    padding: 8px 16px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .modal-tab.active { color: #1E3A5F; border-bottom-color: #1E3A5F; }
+  .modal-tab:hover:not(.active) { color: var(--text); }
+  .tab-panel[hidden] { display: none; }
+  .modal-close-row { margin-top: 12px; display: flex; justify-content: flex-end; }
+
+  /* ── Custom events list ── */
+  #custom-list { max-height: 180px; overflow-y: auto; margin-bottom: 12px; }
+  .custom-empty { color: var(--muted); font-size: 0.85rem; padding: 12px 0; text-align: center; }
+  .custom-event-row {
+    display: flex; align-items: center; gap: 8px; padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .custom-event-info { flex: 1; min-width: 0; font-size: 0.83rem; overflow: hidden; }
+  .custom-event-title { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .custom-event-meta { color: var(--muted); font-size: 0.75rem; margin-top: 1px; }
+  .custom-actions { display: flex; gap: 4px; flex-shrink: 0; }
+  .custom-edit-btn, .custom-delete-btn {
+    padding: 3px 8px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--bg); font-size: 0.75rem; cursor: pointer; color: var(--text);
+  }
+  .custom-delete-btn { color: #EF4444; }
+  .custom-delete-btn:hover { background: #FEF2F2; border-color: #FCA5A5; }
+  .custom-edit-btn:hover { background: #EFF6FF; border-color: #93C5FD; }
+
+  /* ── Custom event form ── */
+  .custom-form-title { font-size: 0.88rem; font-weight: 700; margin: 12px 0 10px; color: #1E3A5F; }
+  .custom-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+  .cf-full { grid-column: 1 / -1; }
+  .optional { font-weight: 400; color: var(--muted); font-size: 0.78rem; }
+  .custom-star { color: #F59E0B; font-size: 0.85rem; }
 
   /* ── Loading ── */
   #loading {
@@ -403,27 +454,95 @@
 
 <div class="modal-bg" id="modal-bg">
   <div class="modal">
-    <h2>Upload New Schedule PDF</h2>
+    <h2 style="margin-bottom:12px">Admin</h2>
     <div class="field">
-      <label for="upload-password">Password</label>
-      <input type="password" id="upload-password" placeholder="Enter upload password" autocomplete="off">
+      <label for="admin-password">Password</label>
+      <input type="password" id="admin-password" placeholder="Enter admin password" autocomplete="off">
     </div>
-    <div class="field">
-      <label for="upload-file">PDF File</label>
-      <input type="file" id="upload-file" accept=".pdf,application/pdf">
+    <div class="modal-tabs">
+      <button class="modal-tab active" data-tab="pdf">PDF Upload</button>
+      <button class="modal-tab" data-tab="custom">Custom Events</button>
     </div>
-    <div id="upload-status"></div>
-    <div class="modal-actions">
-      <button class="btn btn-ghost" id="modal-cancel">Cancel</button>
-      <button class="btn btn-primary" id="upload-btn">Upload &amp; Parse</button>
+
+    <div id="tab-pdf" class="tab-panel">
+      <div class="field">
+        <label for="upload-file">PDF File</label>
+        <input type="file" id="upload-file" accept=".pdf,application/pdf">
+      </div>
+      <div id="upload-status"></div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="upload-btn">Upload &amp; Parse</button>
+      </div>
+    </div>
+
+    <div id="tab-custom" class="tab-panel" hidden>
+      <div id="custom-list"></div>
+      <div class="custom-form-title" id="custom-form-title">Add Custom Event</div>
+      <div class="custom-form-grid">
+        <div class="field">
+          <label for="cf-date">Date</label>
+          <select id="cf-date">
+            <option value="2026-07-06">Mon Jul 6</option>
+            <option value="2026-07-07">Tue Jul 7</option>
+            <option value="2026-07-08">Wed Jul 8</option>
+            <option value="2026-07-09">Thu Jul 9</option>
+            <option value="2026-07-10">Fri Jul 10</option>
+            <option value="2026-07-11">Sat Jul 11</option>
+            <option value="2026-07-12">Sun Jul 12</option>
+            <option value="2026-07-13">Mon Jul 13</option>
+            <option value="2026-07-14">Tue Jul 14</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="cf-type">Type</label>
+          <select id="cf-type">
+            <option value="practice">Practice</option>
+            <option value="class">Class</option>
+            <option value="lesson">Lesson</option>
+            <option value="coaching">Coaching</option>
+            <option value="rehearsal">Rehearsal</option>
+            <option value="recital">Recital</option>
+            <option value="concert">Concert</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="cf-start">Start Time</label>
+          <input type="time" id="cf-start" value="09:00">
+        </div>
+        <div class="field">
+          <label for="cf-end">End Time</label>
+          <input type="time" id="cf-end" value="10:00">
+        </div>
+        <div class="field cf-full">
+          <label for="cf-title">Title</label>
+          <input type="text" id="cf-title" placeholder="e.g. Extra Practice Session">
+        </div>
+        <div class="field cf-full">
+          <label for="cf-location">Location <span class="optional">(optional)</span></label>
+          <input type="text" id="cf-location" placeholder="e.g. Practice Room 3">
+        </div>
+        <div class="field cf-full">
+          <label for="cf-notes">Notes <span class="optional">(optional)</span></label>
+          <input type="text" id="cf-notes" placeholder="Any extra info">
+        </div>
+      </div>
+      <div class="modal-actions" style="margin-top:10px">
+        <button class="btn btn-ghost" id="cf-cancel-edit" style="display:none">Cancel Edit</button>
+        <button class="btn btn-primary" id="cf-save">Save Event</button>
+      </div>
+    </div>
+
+    <div class="modal-close-row">
+      <button class="btn btn-ghost" id="modal-cancel">Close</button>
     </div>
   </div>
 </div>
 
 <script>
-const API_URL  = '__API_URL__';
-const DATA_URL = '__DATA_URL__';
+const API_URL    = '__API_URL__';
+const DATA_URL   = '__DATA_URL__';
 const SCHEDULE_URL = DATA_URL + '/schedule.json';
+const CUSTOM_URL   = DATA_URL + '/custom_events.json';
 
 const CAMP_START = '2026-07-06';
 const CAMP_END   = '2026-07-14';
@@ -451,6 +570,7 @@ const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 let schedule = null;
+let customEvents = [];
 let currentDate = null;
 let timeFormat = localStorage.getItem('concertocamp_time_format') || '12';
 
@@ -504,11 +624,32 @@ function daysAfterCamp() {
 
 // ── Load schedule ────────────────────────────────────────────────────────────
 
+async function loadCustomEvents() {
+  try {
+    const resp = await fetch(CUSTOM_URL + '?t=' + Date.now());
+    if (!resp.ok) { customEvents = []; return; }
+    const data = await resp.json();
+    customEvents = data.events || [];
+  } catch { customEvents = []; }
+}
+
+function getMergedEvents(student, date) {
+  const pdf = (student.events || []).filter(e => e.date === date);
+  const custom = customEvents
+    .filter(e => e.studentId === student.id && e.date === date)
+    .map(e => ({ ...e, isCustom: true }));
+  return [...pdf, ...custom].sort((a, b) =>
+    (a.startTime || '').localeCompare(b.startTime || ''));
+}
+
 async function loadSchedule() {
   try {
-    const resp = await fetch(SCHEDULE_URL + '?t=' + Date.now());
-    if (!resp.ok) throw new Error('Not found');
-    schedule = await resp.json();
+    const [schedResp] = await Promise.all([
+      fetch(SCHEDULE_URL + '?t=' + Date.now()),
+      loadCustomEvents(),
+    ]);
+    if (!schedResp.ok) throw new Error('Not found');
+    schedule = await schedResp.json();
     updateLastUpdated(schedule.generatedAt);
     populateStudentSelect();
     restoreStudent();
@@ -554,6 +695,12 @@ document.getElementById('student-select').addEventListener('change', () => {
   const sid = document.getElementById('student-select').value;
   if (sid) localStorage.setItem('concertocamp_student_id', sid);
   render();
+  const activeTab = document.querySelector('.modal-tab.active');
+  if (activeTab && activeTab.dataset.tab === 'custom' &&
+      document.getElementById('modal-bg').classList.contains('open')) {
+    renderCustomList();
+    resetCustomForm();
+  }
 });
 
 // ── Date navigation ──────────────────────────────────────────────────────────
@@ -639,7 +786,7 @@ function render() {
     }
   }
 
-  const events = (student.events || []).filter(e => e.date === currentDate);
+  const events = getMergedEvents(student, currentDate);
 
   if (events.length === 0) {
     if (testDate() || (!beforeCamp && !afterCamp)) {
@@ -668,11 +815,12 @@ function render() {
       ? `<div class="card-repertoire">${escHtml(ev.repertoire)}</div>`
       : '';
 
+    const customMark = ev.isCustom ? ' <span class="custom-star" title="Custom event">★</span>' : '';
     return `<div class="event-card">
       <div class="card-stripe" style="background:${color}"></div>
       <div class="card-time">${timeStr}</div>
       <div class="card-title">
-        ${escHtml(ev.title)}
+        ${escHtml(ev.title)}${customMark}
         <span class="badge" style="background:${color}">${label}</span>
       </div>
       ${metaHtml}
@@ -694,10 +842,12 @@ function escHtml(s) {
 
 document.getElementById('admin-btn').addEventListener('click', () => {
   document.getElementById('modal-bg').classList.add('open');
-  document.getElementById('upload-password').focus();
+  document.getElementById('admin-password').focus();
   document.getElementById('upload-status').textContent = '';
   document.getElementById('upload-status').className = '';
   document.getElementById('upload-file').value = '';
+  const activeTab = document.querySelector('.modal-tab.active');
+  if (activeTab && activeTab.dataset.tab === 'custom') renderCustomList();
 });
 
 document.getElementById('modal-cancel').addEventListener('click', closeModal);
@@ -709,13 +859,25 @@ function closeModal() {
   document.getElementById('modal-bg').classList.remove('open');
 }
 
+// Tab switching
+document.querySelectorAll('.modal-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    const target = tab.dataset.tab;
+    document.getElementById('tab-pdf').hidden = target !== 'pdf';
+    document.getElementById('tab-custom').hidden = target !== 'custom';
+    if (target === 'custom') { renderCustomList(); resetCustomForm(); }
+  });
+});
+
+// PDF upload
 document.getElementById('upload-btn').addEventListener('click', async () => {
-  const password = document.getElementById('upload-password').value.trim();
+  const password = document.getElementById('admin-password').value.trim();
   const fileInput = document.getElementById('upload-file');
-  const statusEl = document.getElementById('upload-status');
   const btn = document.getElementById('upload-btn');
 
-  if (!password) { showStatus('Enter the upload password.', false); return; }
+  if (!password) { showStatus('Enter the admin password.', false); return; }
   if (!fileInput.files.length) { showStatus('Select a PDF file.', false); return; }
 
   const file = fileInput.files[0];
@@ -767,6 +929,145 @@ function fileToBase64(file) {
     reader.readAsDataURL(file);
   });
 }
+
+// ── Custom events CRUD ────────────────────────────────────────────────────────
+
+let editingCustomId = null;
+
+const DATE_LABELS = {
+  '2026-07-06': 'Mon Jul 6',  '2026-07-07': 'Tue Jul 7',
+  '2026-07-08': 'Wed Jul 8',  '2026-07-09': 'Thu Jul 9',
+  '2026-07-10': 'Fri Jul 10', '2026-07-11': 'Sat Jul 11',
+  '2026-07-12': 'Sun Jul 12', '2026-07-13': 'Mon Jul 13',
+  '2026-07-14': 'Tue Jul 14',
+};
+
+async function customApiCall(action, payload) {
+  const password = document.getElementById('admin-password').value.trim();
+  if (!password) { alert('Enter the admin password first.'); return null; }
+  try {
+    const resp = await fetch(API_URL + '/custom', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, password, ...payload }),
+    });
+    const data = await resp.json();
+    if (!resp.ok || !data.success) { alert(data.error || 'Request failed'); return null; }
+    customEvents = data.events;
+    render();
+    return data;
+  } catch (e) {
+    alert('Network error: ' + e.message);
+    return null;
+  }
+}
+
+function renderCustomList() {
+  const listEl = document.getElementById('custom-list');
+  const student = selectedStudent();
+  if (!student) {
+    listEl.innerHTML = '<div class="custom-empty">Select a student in the schedule view first.</div>';
+    return;
+  }
+  const evs = customEvents
+    .filter(e => e.studentId === student.id)
+    .sort((a, b) => a.date.localeCompare(b.date) || (a.startTime || '').localeCompare(b.startTime || ''));
+  if (evs.length === 0) {
+    listEl.innerHTML = `<div class="custom-empty">No custom events for ${escHtml(student.name)}.</div>`;
+    return;
+  }
+  listEl.innerHTML = evs.map(ev => {
+    const color = TYPE_COLOR[ev.type] || '#94A3B8';
+    const lbl   = TYPE_LABEL[ev.type] || ev.type;
+    const dateStr = DATE_LABELS[ev.date] || ev.date;
+    const timeStr = ev.endTime ? `${ev.startTime}–${ev.endTime}` : (ev.startTime || '');
+    return `<div class="custom-event-row">
+      <span class="badge" style="background:${color};flex-shrink:0">${lbl}</span>
+      <div class="custom-event-info">
+        <div class="custom-event-title">${escHtml(ev.title)}</div>
+        <div class="custom-event-meta">${dateStr} · ${timeStr}${ev.location ? ' · ' + escHtml(ev.location) : ''}</div>
+      </div>
+      <div class="custom-actions">
+        <button class="custom-edit-btn" data-id="${ev.id}">Edit</button>
+        <button class="custom-delete-btn" data-id="${ev.id}">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  listEl.querySelectorAll('.custom-edit-btn').forEach(btn => {
+    btn.addEventListener('click', () => startEditCustom(btn.dataset.id));
+  });
+  listEl.querySelectorAll('.custom-delete-btn').forEach(btn => {
+    btn.addEventListener('click', () => deleteCustom(btn.dataset.id));
+  });
+}
+
+function resetCustomForm() {
+  editingCustomId = null;
+  document.getElementById('custom-form-title').textContent = 'Add Custom Event';
+  document.getElementById('cf-cancel-edit').style.display = 'none';
+  document.getElementById('cf-save').textContent = 'Save Event';
+  document.getElementById('cf-date').value = currentDate || '2026-07-06';
+  document.getElementById('cf-type').value = 'practice';
+  document.getElementById('cf-start').value = '09:00';
+  document.getElementById('cf-end').value = '10:00';
+  document.getElementById('cf-title').value = '';
+  document.getElementById('cf-location').value = '';
+  document.getElementById('cf-notes').value = '';
+}
+
+function startEditCustom(id) {
+  const ev = customEvents.find(e => e.id === id);
+  if (!ev) return;
+  editingCustomId = id;
+  document.getElementById('custom-form-title').textContent = 'Edit Event';
+  document.getElementById('cf-cancel-edit').style.display = '';
+  document.getElementById('cf-save').textContent = 'Update Event';
+  document.getElementById('cf-date').value = ev.date || '2026-07-06';
+  document.getElementById('cf-type').value = ev.type || 'practice';
+  document.getElementById('cf-start').value = ev.startTime || '';
+  document.getElementById('cf-end').value = ev.endTime || '';
+  document.getElementById('cf-title').value = ev.title || '';
+  document.getElementById('cf-location').value = ev.location || '';
+  document.getElementById('cf-notes').value = ev.notes || '';
+  document.getElementById('cf-title').focus();
+}
+
+async function deleteCustom(id) {
+  const ev = customEvents.find(e => e.id === id);
+  if (!ev) return;
+  if (!confirm(`Delete "${ev.title}" on ${DATE_LABELS[ev.date] || ev.date}?`)) return;
+  const result = await customApiCall('delete', { id });
+  if (result) renderCustomList();
+}
+
+document.getElementById('cf-save').addEventListener('click', async () => {
+  const student = selectedStudent();
+  if (!student) { alert('Select a student in the schedule view first.'); return; }
+  const title = document.getElementById('cf-title').value.trim();
+  if (!title) { alert('Title is required.'); return; }
+  const ev = {
+    studentId: student.id,
+    date:      document.getElementById('cf-date').value,
+    type:      document.getElementById('cf-type').value,
+    startTime: document.getElementById('cf-start').value,
+    endTime:   document.getElementById('cf-end').value,
+    title,
+    location: document.getElementById('cf-location').value.trim() || null,
+    teacher:  null,
+    notes:    document.getElementById('cf-notes').value.trim() || null,
+  };
+  if (editingCustomId) {
+    ev.id = editingCustomId;
+    const result = await customApiCall('update', { event: ev });
+    if (result) { resetCustomForm(); renderCustomList(); }
+  } else {
+    const result = await customApiCall('add', { event: ev });
+    if (result) { resetCustomForm(); renderCustomList(); }
+  }
+});
+
+document.getElementById('cf-cancel-edit').addEventListener('click', resetCustomForm);
 
 // ── Time format toggle ────────────────────────────────────────────────────────
 
@@ -918,8 +1219,8 @@ function printSchedule() {
         doc.setTextColor(255, 255, 255);
         doc.text(DAY_FULL[dow] + ', ' + MONTH_ABR[mo - 1] + ' ' + dy, bx + 7, by + HDR_H - 4);
 
-        // Events
-        const events = (student.events || []).filter(e => e.date === date);
+        // Events (merged PDF + custom)
+        const events = getMergedEvents(student, date);
         let ey = by + HDR_H + EVT_PAD;
         const maxY = by + rowH - 4;
 
