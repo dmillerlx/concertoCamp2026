@@ -1636,102 +1636,107 @@ FPDFBookmark_GetAction = _libs['pdfium']['FPDFBookmark_GetAction']
 FPDFBookmark_GetAction.argtypes = (FPDF_BOOKMARK, )
 FPDFBookmark_GetAction.restype = FPDF_ACTION
 
-# ./fpdf_doc.h: 149
+# ./fpdf_doc.h: 151
+FPDFBookmark_GetColor = _libs['pdfium']['FPDFBookmark_GetColor']
+FPDFBookmark_GetColor.argtypes = (FPDF_BOOKMARK, POINTER(c_float), POINTER(c_float), POINTER(c_float))
+FPDFBookmark_GetColor.restype = FPDF_BOOL
+
+# ./fpdf_doc.h: 163
 FPDFAction_GetType = _libs['pdfium']['FPDFAction_GetType']
 FPDFAction_GetType.argtypes = (FPDF_ACTION, )
 FPDFAction_GetType.restype = c_ulong
 
-# ./fpdf_doc.h: 163
+# ./fpdf_doc.h: 177
 FPDFAction_GetDest = _libs['pdfium']['FPDFAction_GetDest']
 FPDFAction_GetDest.argtypes = (FPDF_DOCUMENT, FPDF_ACTION)
 FPDFAction_GetDest.restype = FPDF_DEST
 
-# ./fpdf_doc.h: 181
+# ./fpdf_doc.h: 195
 FPDFAction_GetFilePath = _libs['pdfium']['FPDFAction_GetFilePath']
 FPDFAction_GetFilePath.argtypes = (FPDF_ACTION, POINTER(None), c_ulong)
 FPDFAction_GetFilePath.restype = c_ulong
 
-# ./fpdf_doc.h: 207
+# ./fpdf_doc.h: 221
 FPDFAction_GetURIPath = _libs['pdfium']['FPDFAction_GetURIPath']
 FPDFAction_GetURIPath.argtypes = (FPDF_DOCUMENT, FPDF_ACTION, POINTER(None), c_ulong)
 FPDFAction_GetURIPath.restype = c_ulong
 
-# ./fpdf_doc.h: 218
+# ./fpdf_doc.h: 232
 FPDFDest_GetDestPageIndex = _libs['pdfium']['FPDFDest_GetDestPageIndex']
 FPDFDest_GetDestPageIndex.argtypes = (FPDF_DOCUMENT, FPDF_DEST)
 FPDFDest_GetDestPageIndex.restype = c_int
 
-# ./fpdf_doc.h: 231
+# ./fpdf_doc.h: 245
 FPDFDest_GetView = _libs['pdfium']['FPDFDest_GetView']
 FPDFDest_GetView.argtypes = (FPDF_DEST, POINTER(c_ulong), POINTER(FS_FLOAT))
 FPDFDest_GetView.restype = c_ulong
 
-# ./fpdf_doc.h: 248
+# ./fpdf_doc.h: 262
 FPDFDest_GetLocationInPage = _libs['pdfium']['FPDFDest_GetLocationInPage']
 FPDFDest_GetLocationInPage.argtypes = (FPDF_DEST, POINTER(FPDF_BOOL), POINTER(FPDF_BOOL), POINTER(FPDF_BOOL), POINTER(FS_FLOAT), POINTER(FS_FLOAT), POINTER(FS_FLOAT))
 FPDFDest_GetLocationInPage.restype = FPDF_BOOL
 
-# ./fpdf_doc.h: 266
+# ./fpdf_doc.h: 280
 FPDFLink_GetLinkAtPoint = _libs['pdfium']['FPDFLink_GetLinkAtPoint']
 FPDFLink_GetLinkAtPoint.argtypes = (FPDF_PAGE, c_double, c_double)
 FPDFLink_GetLinkAtPoint.restype = FPDF_LINK
 
-# ./fpdf_doc.h: 281
+# ./fpdf_doc.h: 295
 FPDFLink_GetLinkZOrderAtPoint = _libs['pdfium']['FPDFLink_GetLinkZOrderAtPoint']
 FPDFLink_GetLinkZOrderAtPoint.argtypes = (FPDF_PAGE, c_double, c_double)
 FPDFLink_GetLinkZOrderAtPoint.restype = c_int
 
-# ./fpdf_doc.h: 293
+# ./fpdf_doc.h: 307
 FPDFLink_GetDest = _libs['pdfium']['FPDFLink_GetDest']
 FPDFLink_GetDest.argtypes = (FPDF_DOCUMENT, FPDF_LINK)
 FPDFLink_GetDest.restype = FPDF_DEST
 
-# ./fpdf_doc.h: 303
+# ./fpdf_doc.h: 317
 FPDFLink_GetAction = _libs['pdfium']['FPDFLink_GetAction']
 FPDFLink_GetAction.argtypes = (FPDF_LINK, )
 FPDFLink_GetAction.restype = FPDF_ACTION
 
-# ./fpdf_doc.h: 313
+# ./fpdf_doc.h: 327
 FPDFLink_Enumerate = _libs['pdfium']['FPDFLink_Enumerate']
 FPDFLink_Enumerate.argtypes = (FPDF_PAGE, POINTER(c_int), POINTER(FPDF_LINK))
 FPDFLink_Enumerate.restype = FPDF_BOOL
 
-# ./fpdf_doc.h: 326
+# ./fpdf_doc.h: 340
 FPDFLink_GetAnnot = _libs['pdfium']['FPDFLink_GetAnnot']
 FPDFLink_GetAnnot.argtypes = (FPDF_PAGE, FPDF_LINK)
 FPDFLink_GetAnnot.restype = FPDF_ANNOTATION
 
-# ./fpdf_doc.h: 334
+# ./fpdf_doc.h: 348
 FPDFLink_GetAnnotRect = _libs['pdfium']['FPDFLink_GetAnnotRect']
 FPDFLink_GetAnnotRect.argtypes = (FPDF_LINK, POINTER(FS_RECTF))
 FPDFLink_GetAnnotRect.restype = FPDF_BOOL
 
-# ./fpdf_doc.h: 342
+# ./fpdf_doc.h: 356
 FPDFLink_CountQuadPoints = _libs['pdfium']['FPDFLink_CountQuadPoints']
 FPDFLink_CountQuadPoints.argtypes = (FPDF_LINK, )
 FPDFLink_CountQuadPoints.restype = c_int
 
-# ./fpdf_doc.h: 352
+# ./fpdf_doc.h: 366
 FPDFLink_GetQuadPoints = _libs['pdfium']['FPDFLink_GetQuadPoints']
 FPDFLink_GetQuadPoints.argtypes = (FPDF_LINK, c_int, POINTER(FS_QUADPOINTSF))
 FPDFLink_GetQuadPoints.restype = FPDF_BOOL
 
-# ./fpdf_doc.h: 367
+# ./fpdf_doc.h: 381
 FPDF_GetPageAAction = _libs['pdfium']['FPDF_GetPageAAction']
 FPDF_GetPageAAction.argtypes = (FPDF_PAGE, c_int)
 FPDF_GetPageAAction.restype = FPDF_ACTION
 
-# ./fpdf_doc.h: 385
+# ./fpdf_doc.h: 399
 FPDF_GetFileIdentifier = _libs['pdfium']['FPDF_GetFileIdentifier']
 FPDF_GetFileIdentifier.argtypes = (FPDF_DOCUMENT, FPDF_FILEIDTYPE, POINTER(None), c_ulong)
 FPDF_GetFileIdentifier.restype = c_ulong
 
-# ./fpdf_doc.h: 411
+# ./fpdf_doc.h: 425
 FPDF_GetMetaText = _libs['pdfium']['FPDF_GetMetaText']
 FPDF_GetMetaText.argtypes = (FPDF_DOCUMENT, FPDF_BYTESTRING, POINTER(None), c_ulong)
 FPDF_GetMetaText.restype = c_ulong
 
-# ./fpdf_doc.h: 429
+# ./fpdf_doc.h: 443
 FPDF_GetPageLabel = _libs['pdfium']['FPDF_GetPageLabel']
 FPDF_GetPageLabel.argtypes = (FPDF_DOCUMENT, c_int, POINTER(None), c_ulong)
 FPDF_GetPageLabel.restype = c_ulong

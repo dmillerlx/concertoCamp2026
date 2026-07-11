@@ -526,28 +526,35 @@ def parse_rehearsals(pages):
     events = []
     # Default to July 9 — early entries appear before "7/9" date label in text
     current_date = '2026-07-09'
+    last_start = None
 
     for page in pages[6:8]:  # pages 7-8 (index 6-7)
         text = page.extract_text() or ''
         for line in text.split('\n'):
-            # Detect date change to 7/10
-            if re.search(r'\b7/10\b', line):
-                current_date = '2026-07-10'
-
             # re.search (not match) handles "7/10 HH:MM-..." and "Ehrbarsaal HH:MM-..." prefixes
             entry_m = re.search(
                 r'(\d{1,2}:\d{2})-(\d{1,2}:\d{2})\s+(.+?)\s+([ABCD]\d)\s+(Mozart.+)',
                 line
             )
             if entry_m:
-                start = entry_m.group(1)
+                start = _pad_time(entry_m.group(1))
                 end = entry_m.group(2)
                 sid = entry_m.group(4)
                 repertoire = entry_m.group(5).strip()
+
+                # Detect day rollover by time-of-day resetting (e.g. 19:30 -> 10:00),
+                # not by the "7/10" text label — that label sits in a merged cell and
+                # is vertically centered relative to its whole row block, so it appears
+                # several rows *after* the true boundary in the linear text extraction
+                # (was mis-tagging the first 3 students of July 10 as July 9).
+                if last_start is not None and start <= last_start:
+                    current_date = '2026-07-10'
+                last_start = start
+
                 events.append({
                     'student_id': sid,
                     'date': current_date,
-                    'startTime': _pad_time(start),
+                    'startTime': start,
                     'endTime': _pad_time(end),
                     'type': 'rehearsal',
                     'title': 'Orchestra Rehearsal',
@@ -573,7 +580,30 @@ def parse_recitals(pages):
     # (merged cell layout puts metadata below the first few entries). Default to Jul 8.
     current_date = '2026-07-08'
     seen = {}  # (sid, date) -> event index for multi-piece merging
-    last_sid = None  # track last matched student for continuation lines
+    last_sid = None   # track last matched student for continuation lines
+    last_date = None  # date assigned to last_sid, for continuation-line lookups
+
+    # Authoritative student_id -> date map from bordered tables on these pages.
+    # The merged "Date/Space" cell (e.g. "7/12\n19:00\nEhrbarsaal\nSmall Hall") is a
+    # single tall cell spanning several grid rows, and pdfplumber renders its text
+    # vertically centered within that span rather than at the top. That means the
+    # plain linear-text scan below (looking for a bare "7/12" line) finds the label
+    # several student rows *after* the table's actual first row for that date —
+    # exactly the bug that mis-dated 3 rehearsal students. Table extraction reflects
+    # the real grid structure, so where a table is found it overrides the text scan.
+    table_date_by_id = {}
+    for page in pages[7:10]:  # pages 8-10 (index 7-9)
+        for table in page.extract_tables():
+            if not table or not table[0] or not table[0][0]:
+                continue
+            date_m = re.search(r'\b7/(8|12)\b', table[0][0])
+            if not date_m:
+                continue
+            table_date = f'2026-07-{int(date_m.group(1)):02d}'
+            for row in table:
+                for cell in row:
+                    if cell and re.match(r'^[ABCD]\d$', cell.strip()):
+                        table_date_by_id[cell.strip()] = table_date
 
     skip_starts = ('Chart', 'Time', 'Space', 'Student', 'Ehrbarsaal', 'Small', 'Grand',
                    'Main', 'Group', 'Date', 'July', '*Please', 'orchestra', 'short', 'his',
@@ -584,7 +614,8 @@ def parse_recitals(pages):
         for line in text.split('\n'):
             stripped = line.strip()
 
-            # Date detection: "7/8" or "7/12" anywhere on the line
+            # Date detection: "7/8" or "7/12" anywhere on the line (fallback only —
+            # overridden per-student by table_date_by_id when available)
             date_m = re.search(r'\b7/(8|12)\b', stripped)
             if date_m:
                 current_date = f'2026-07-{int(date_m.group(1)):02d}'
@@ -605,14 +636,15 @@ def parse_recitals(pages):
                 if sid not in by_id_ref:
                     continue
 
-                key = (sid, current_date)
+                date = table_date_by_id.get(sid, current_date)
+                key = (sid, date)
                 if key in seen:
                     events[seen[key]]['repertoire'] += ' / ' + repertoire
                 else:
                     seen[key] = len(events)
                     events.append({
                         'student_id': sid,
-                        'date': current_date,
+                        'date': date,
                         'startTime': '19:00',
                         'endTime': '21:00',
                         'type': 'recital',
@@ -623,9 +655,10 @@ def parse_recitals(pages):
                         'notes': None,
                     })
                 last_sid = sid
+                last_date = date
             elif last_sid and re.match(r'^[A-Z]', stripped):
                 # Continuation repertoire line (second piece, no student ID)
-                key = (last_sid, current_date)
+                key = (last_sid, last_date)
                 if key in seen:
                     events[seen[key]]['repertoire'] += ' / ' + stripped
             else:

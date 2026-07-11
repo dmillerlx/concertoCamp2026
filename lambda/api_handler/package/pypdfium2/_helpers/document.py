@@ -50,8 +50,6 @@ class PdfDocument (pdfium_i.AutoCloseable):
     Attributes:
         raw (FPDF_DOCUMENT):
             The underlying PDFium document handle.
-        formenv (PdfFormEnv | None):
-            Form env, if the document has forms and :meth:`.init_forms` was called.
     """
     
     def __init__(self, input, password=None, autoclose=False):
@@ -148,6 +146,9 @@ class PdfDocument (pdfium_i.AutoCloseable):
     
     @property
     def formenv(self):
+        """
+        PdfFormEnv | None: Form env, if the document has forms and :meth:`.init_forms` was called.
+        """
         return self._formenv_holder.obj
     
     @formenv.setter
@@ -158,7 +159,7 @@ class PdfDocument (pdfium_i.AutoCloseable):
     def init_forms(self, config=None):
         """
         Initialize a form env, if the document has forms.
-        If already initialized, nothing will be done. See the :attr:`formenv` attribute.
+        If already initialized, nothing will be done. See the :attr:`formenv` property.
         
         If PDFium was built with XFA support and the PDF has XFA forms, it will be attempted to load these as well.
         
@@ -207,9 +208,9 @@ class PdfDocument (pdfium_i.AutoCloseable):
         """
         Manually close the formenv, if initialized.
         
-        If this method is not called, the formenv will be closed when the PDF is closed.
+        Formenvs that were not explicitly closed will be closed when their PDF is closed.
         
-        .. versionadded:: 5.10.0
+        .. versionadded:: 5.10
         """
         if not self.formenv:
             return False
@@ -587,6 +588,9 @@ def _open_pdf(input_data, password, autoclose):
 
 
 class _ObjectHolder:
+    
+    __slots__ = ("obj", )
+    
     def __init__(self, obj):
         self.obj = obj
 
@@ -595,15 +599,15 @@ class PdfFormEnv (pdfium_i.AutoCastable):
     """
     Form environment helper class.
     
+    .. versionchanged:: 5.10
+        The ``pdf`` attribute and ``parent`` alias had to be removed to fix possible trouble with finalization due to an indirect self-reference.
+        Formenv lifetime is now managed through the parent :class:`.PdfDocument` itself to break a reference circle.
+    
     Attributes:
         raw (FPDF_FORMHANDLE):
             The underlying PDFium form env handle.
         config (FPDF_FORMFILLINFO):
             Accompanying form configuration interface, to be kept alive.
-    
-    .. versionchanged:: 5.10.0
-        The ``pdf`` attribute and ``parent`` alias had to be removed to fix trouble with finalization due to an indirect self-reference.
-        Formenv lifetime is now managed through the parent :class:`.PdfDocument` itself to avoid a reference circle.
     """
     
     def __init__(self, raw, config):
@@ -612,7 +616,7 @@ class PdfFormEnv (pdfium_i.AutoCastable):
     
     def close(self):
         """
-        .. deprecated:: 5.10.0
+        .. deprecated:: 5.10
             This method is now a no-op. Please use :meth:`.PdfDocument.close_forms` instead.
         """
         # Explicit closing should clean up the .formenv attribute from the parent document, so it cannot be implemented here.
@@ -694,6 +698,20 @@ class PdfBookmark (pdfium_i.AutoCastable):
             Zero if the bookmark has no descendants.
         """
         return pdfium_c.FPDFBookmark_GetCount(self)
+    
+    def get_color(self):
+        """
+        .. versionadded:: 5.11.0
+        
+        Returns:
+            tuple[float,float,float] | None: The bookmark's RGB color as float values between 0 and 1, or None if the bookmark does not define a (valid) color.
+        """
+        # requires pdfium > 7912
+        r, g, b = ctypes.c_float(), ctypes.c_float(), ctypes.c_float()
+        ok = pdfium_c.FPDFBookmark_GetColor(self, r, g, b)
+        if not ok:
+            return None
+        return r.value, g.value, b.value
     
     def get_dest(self):
         """

@@ -462,6 +462,7 @@
     <div class="modal-tabs">
       <button class="modal-tab active" data-tab="pdf">PDF Upload</button>
       <button class="modal-tab" data-tab="custom">Custom Events</button>
+      <button class="modal-tab" data-tab="global">Global Events</button>
     </div>
 
     <div id="tab-pdf" class="tab-panel">
@@ -503,6 +504,7 @@
             <option value="rehearsal">Rehearsal</option>
             <option value="recital">Recital</option>
             <option value="concert">Concert</option>
+            <option value="other">Other</option>
           </select>
         </div>
         <div class="field">
@@ -532,6 +534,65 @@
       </div>
     </div>
 
+    <div id="tab-global" class="tab-panel" hidden>
+      <p class="optional" style="margin-bottom:10px">These events are added to every student's schedule automatically.</p>
+      <div id="global-list"></div>
+      <div class="custom-form-title" id="global-form-title">Add Global Event</div>
+      <div class="custom-form-grid">
+        <div class="field">
+          <label for="gf-date">Date</label>
+          <select id="gf-date">
+            <option value="2026-07-06">Mon Jul 6</option>
+            <option value="2026-07-07">Tue Jul 7</option>
+            <option value="2026-07-08">Wed Jul 8</option>
+            <option value="2026-07-09">Thu Jul 9</option>
+            <option value="2026-07-10">Fri Jul 10</option>
+            <option value="2026-07-11">Sat Jul 11</option>
+            <option value="2026-07-12">Sun Jul 12</option>
+            <option value="2026-07-13">Mon Jul 13</option>
+            <option value="2026-07-14">Tue Jul 14</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="gf-type">Type</label>
+          <select id="gf-type">
+            <option value="practice">Practice</option>
+            <option value="class">Class</option>
+            <option value="lesson">Lesson</option>
+            <option value="coaching">Coaching</option>
+            <option value="rehearsal">Rehearsal</option>
+            <option value="recital">Recital</option>
+            <option value="concert">Concert</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="gf-start">Start Time</label>
+          <input type="time" id="gf-start" value="09:00">
+        </div>
+        <div class="field">
+          <label for="gf-end">End Time</label>
+          <input type="time" id="gf-end" value="10:00">
+        </div>
+        <div class="field cf-full">
+          <label for="gf-title">Title</label>
+          <input type="text" id="gf-title" placeholder="e.g. Orientation">
+        </div>
+        <div class="field cf-full">
+          <label for="gf-location">Location <span class="optional">(optional)</span></label>
+          <input type="text" id="gf-location" placeholder="e.g. Main Hall">
+        </div>
+        <div class="field cf-full">
+          <label for="gf-notes">Notes <span class="optional">(optional)</span></label>
+          <input type="text" id="gf-notes" placeholder="Any extra info">
+        </div>
+      </div>
+      <div class="modal-actions" style="margin-top:10px">
+        <button class="btn btn-ghost" id="gf-cancel-edit" style="display:none">Cancel Edit</button>
+        <button class="btn btn-primary" id="gf-save">Save Event</button>
+      </div>
+    </div>
+
     <div class="modal-close-row">
       <button class="btn btn-ghost" id="modal-cancel">Close</button>
     </div>
@@ -555,6 +616,7 @@ const TYPE_COLOR = {
   recital:  '#F59E0B',
   concert:  '#EF4444',
   practice: '#6B7280',
+  other:    '#EAB308',
 };
 const TYPE_LABEL = {
   class:    'Class',
@@ -564,7 +626,10 @@ const TYPE_LABEL = {
   recital:  'Recital',
   concert:  'Concert',
   practice: 'Practice',
+  other:    'Other',
 };
+
+const GLOBAL_STUDENT_ID = 'GLOBAL';
 
 const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -636,7 +701,7 @@ async function loadCustomEvents() {
 function getMergedEvents(student, date) {
   const pdf = (student.events || []).filter(e => e.date === date);
   const custom = customEvents
-    .filter(e => e.studentId === student.id && e.date === date)
+    .filter(e => (e.studentId === student.id || e.studentId === GLOBAL_STUDENT_ID) && e.date === date)
     .map(e => ({ ...e, isCustom: true }));
   return [...pdf, ...custom].sort((a, b) =>
     (a.startTime || '').localeCompare(b.startTime || ''));
@@ -848,6 +913,7 @@ document.getElementById('admin-btn').addEventListener('click', () => {
   document.getElementById('upload-file').value = '';
   const activeTab = document.querySelector('.modal-tab.active');
   if (activeTab && activeTab.dataset.tab === 'custom') renderCustomList();
+  if (activeTab && activeTab.dataset.tab === 'global') renderGlobalList();
 });
 
 document.getElementById('modal-cancel').addEventListener('click', closeModal);
@@ -867,7 +933,9 @@ document.querySelectorAll('.modal-tab').forEach(tab => {
     const target = tab.dataset.tab;
     document.getElementById('tab-pdf').hidden = target !== 'pdf';
     document.getElementById('tab-custom').hidden = target !== 'custom';
+    document.getElementById('tab-global').hidden = target !== 'global';
     if (target === 'custom') { renderCustomList(); resetCustomForm(); }
+    if (target === 'global') { renderGlobalList(); resetGlobalForm(); }
   });
 });
 
@@ -1069,6 +1137,110 @@ document.getElementById('cf-save').addEventListener('click', async () => {
 
 document.getElementById('cf-cancel-edit').addEventListener('click', resetCustomForm);
 
+// ── Global events (apply to all students) ────────────────────────────────────
+
+let editingGlobalId = null;
+
+function renderGlobalList() {
+  const listEl = document.getElementById('global-list');
+  const evs = customEvents
+    .filter(e => e.studentId === GLOBAL_STUDENT_ID)
+    .sort((a, b) => a.date.localeCompare(b.date) || (a.startTime || '').localeCompare(b.startTime || ''));
+  if (evs.length === 0) {
+    listEl.innerHTML = '<div class="custom-empty">No global events yet.</div>';
+    return;
+  }
+  listEl.innerHTML = evs.map(ev => {
+    const color = TYPE_COLOR[ev.type] || '#94A3B8';
+    const lbl   = TYPE_LABEL[ev.type] || ev.type;
+    const dateStr = DATE_LABELS[ev.date] || ev.date;
+    const timeStr = ev.endTime ? `${ev.startTime}–${ev.endTime}` : (ev.startTime || '');
+    return `<div class="custom-event-row">
+      <span class="badge" style="background:${color};flex-shrink:0">${lbl}</span>
+      <div class="custom-event-info">
+        <div class="custom-event-title">${escHtml(ev.title)}</div>
+        <div class="custom-event-meta">${dateStr} · ${timeStr}${ev.location ? ' · ' + escHtml(ev.location) : ''}</div>
+      </div>
+      <div class="custom-actions">
+        <button class="custom-edit-btn" data-id="${ev.id}">Edit</button>
+        <button class="custom-delete-btn" data-id="${ev.id}">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  listEl.querySelectorAll('.custom-edit-btn').forEach(btn => {
+    btn.addEventListener('click', () => startEditGlobal(btn.dataset.id));
+  });
+  listEl.querySelectorAll('.custom-delete-btn').forEach(btn => {
+    btn.addEventListener('click', () => deleteGlobal(btn.dataset.id));
+  });
+}
+
+function resetGlobalForm() {
+  editingGlobalId = null;
+  document.getElementById('global-form-title').textContent = 'Add Global Event';
+  document.getElementById('gf-cancel-edit').style.display = 'none';
+  document.getElementById('gf-save').textContent = 'Save Event';
+  document.getElementById('gf-date').value = currentDate || '2026-07-06';
+  document.getElementById('gf-type').value = 'practice';
+  document.getElementById('gf-start').value = '09:00';
+  document.getElementById('gf-end').value = '10:00';
+  document.getElementById('gf-title').value = '';
+  document.getElementById('gf-location').value = '';
+  document.getElementById('gf-notes').value = '';
+}
+
+function startEditGlobal(id) {
+  const ev = customEvents.find(e => e.id === id);
+  if (!ev) return;
+  editingGlobalId = id;
+  document.getElementById('global-form-title').textContent = 'Edit Global Event';
+  document.getElementById('gf-cancel-edit').style.display = '';
+  document.getElementById('gf-save').textContent = 'Update Event';
+  document.getElementById('gf-date').value = ev.date || '2026-07-06';
+  document.getElementById('gf-type').value = ev.type || 'practice';
+  document.getElementById('gf-start').value = ev.startTime || '';
+  document.getElementById('gf-end').value = ev.endTime || '';
+  document.getElementById('gf-title').value = ev.title || '';
+  document.getElementById('gf-location').value = ev.location || '';
+  document.getElementById('gf-notes').value = ev.notes || '';
+  document.getElementById('gf-title').focus();
+}
+
+async function deleteGlobal(id) {
+  const ev = customEvents.find(e => e.id === id);
+  if (!ev) return;
+  if (!confirm(`Delete global event "${ev.title}" on ${DATE_LABELS[ev.date] || ev.date}? This removes it from every student's schedule.`)) return;
+  const result = await customApiCall('delete', { id });
+  if (result) renderGlobalList();
+}
+
+document.getElementById('gf-save').addEventListener('click', async () => {
+  const title = document.getElementById('gf-title').value.trim();
+  if (!title) { alert('Title is required.'); return; }
+  const ev = {
+    studentId: GLOBAL_STUDENT_ID,
+    date:      document.getElementById('gf-date').value,
+    type:      document.getElementById('gf-type').value,
+    startTime: document.getElementById('gf-start').value,
+    endTime:   document.getElementById('gf-end').value,
+    title,
+    location: document.getElementById('gf-location').value.trim() || null,
+    teacher:  null,
+    notes:    document.getElementById('gf-notes').value.trim() || null,
+  };
+  if (editingGlobalId) {
+    ev.id = editingGlobalId;
+    const result = await customApiCall('update', { event: ev });
+    if (result) { resetGlobalForm(); renderGlobalList(); }
+  } else {
+    const result = await customApiCall('add', { event: ev });
+    if (result) { resetGlobalForm(); renderGlobalList(); }
+  }
+});
+
+document.getElementById('gf-cancel-edit').addEventListener('click', resetGlobalForm);
+
 // ── Time format toggle ────────────────────────────────────────────────────────
 
 const timeFormatBtn = document.getElementById('time-format-btn');
@@ -1181,6 +1353,7 @@ function printSchedule() {
         recital:  [245, 158, 11],
         concert:  [239, 68, 68],
         practice: [107, 114, 128],
+        other:    [234, 179, 8],
       };
 
       // Build camp dates array
@@ -1285,6 +1458,7 @@ function printSchedule() {
         ['Class', C.class], ['Lesson/Coaching', C.lesson],
         ['Rehearsal', C.rehearsal], ['Recital', C.recital],
         ['Concert', C.concert], ['Practice', C.practice],
+        ['Other', C.other],
       ];
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(7);

@@ -10,6 +10,9 @@ class _fallback_dict (dict):
     
     def get(self, key, default_prefix="Unhandled constant"):
         return dict.get(self, key, f"{default_prefix} {key}")
+    
+    def copy(self):
+        return _fallback_dict(self)  # dict constructor copies
 
 
 #: Convert a rotation value in degrees to a PDFium constant.
@@ -178,6 +181,13 @@ CharsetToStr = _fallback_dict({
     pdfium_c.FXFONT_CYRILLIC_CHARSET:        "Cyrillic",
     pdfium_c.FXFONT_THAI_CHARSET:            "Thai",
     pdfium_c.FXFONT_EASTERNEUROPEAN_CHARSET: "EasternEuropean",
+})
+
+RenderStatusToStr = _fallback_dict({
+    pdfium_c.FPDF_RENDER_READY:         "ready",
+    pdfium_c.FPDF_RENDER_TOBECONTINUED: "to be continued",
+    pdfium_c.FPDF_RENDER_DONE:          "done",
+    pdfium_c.FPDF_RENDER_FAILED:        "failed",
 })
 
 class PdfFontPitchFamilyFlags (enum.Flag):

@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: pypdfium2
-Version: 5.10.1
+Version: 5.11.0
 Summary: Python bindings to PDFium
 Home-page: https://github.com/pypdfium2-team/pypdfium2
 Author: pypdfium2-team
@@ -24,34 +24,22 @@ Description-Content-Type: text/markdown
 License-File: LICENSES/Apache-2.0.txt
 License-File: LICENSES/BSD-3-Clause.txt
 License-File: LICENSES/CC-BY-4.0.txt
-License-File: BUILD_LICENSES/abseil.txt
-License-File: BUILD_LICENSES/agg23.txt
-License-File: BUILD_LICENSES/all_except_musl/llvm-libc.txt
-License-File: BUILD_LICENSES/android/catapult.txt
-License-File: BUILD_LICENSES/android/cpu_features.txt
-License-File: BUILD_LICENSES/android/libunwind.txt
-License-File: BUILD_LICENSES/cibw_musl/libgcc_and_libstdc++.txt
-License-File: BUILD_LICENSES/fast_float.txt
-License-File: BUILD_LICENSES/freetype.txt
-License-File: BUILD_LICENSES/icu.txt
-License-File: BUILD_LICENSES/lcms.txt
-License-File: BUILD_LICENSES/libjpeg_turbo.ijg
-License-File: BUILD_LICENSES/libjpeg_turbo.md
-License-File: BUILD_LICENSES/libopenjpeg.txt
-License-File: BUILD_LICENSES/libpng.txt
-License-File: BUILD_LICENSES/libtiff.txt
-License-File: BUILD_LICENSES/pdfium-binaries.txt
-License-File: BUILD_LICENSES/pdfium-binaries_musl/musl.txt
-License-File: BUILD_LICENSES/pdfium.txt
-License-File: BUILD_LICENSES/v8_xfa/bigint.txt
-License-File: BUILD_LICENSES/v8_xfa/fdlibm.txt
-License-File: BUILD_LICENSES/v8_xfa/fp16.txt
-License-File: BUILD_LICENSES/v8_xfa/highway.txt
-License-File: BUILD_LICENSES/v8_xfa/inspector_protocol.txt
-License-File: BUILD_LICENSES/v8_xfa/simdutf.txt
-License-File: BUILD_LICENSES/v8_xfa/strongtalk.txt
-License-File: BUILD_LICENSES/v8_xfa/v8.txt
-License-File: BUILD_LICENSES/zlib.txt
+License-File: data/linux_x64/BUILD_LICENSES/abseil.txt
+License-File: data/linux_x64/BUILD_LICENSES/agg23.txt
+License-File: data/linux_x64/BUILD_LICENSES/fast_float.txt
+License-File: data/linux_x64/BUILD_LICENSES/freetype.txt
+License-File: data/linux_x64/BUILD_LICENSES/icu.txt
+License-File: data/linux_x64/BUILD_LICENSES/lcms.txt
+License-File: data/linux_x64/BUILD_LICENSES/libjpeg_turbo.ijg
+License-File: data/linux_x64/BUILD_LICENSES/libjpeg_turbo.md
+License-File: data/linux_x64/BUILD_LICENSES/libopenjpeg.txt
+License-File: data/linux_x64/BUILD_LICENSES/libpng.txt
+License-File: data/linux_x64/BUILD_LICENSES/libtiff.txt
+License-File: data/linux_x64/BUILD_LICENSES/llvm-libc.txt
+License-File: data/linux_x64/BUILD_LICENSES/pdfium-binaries.txt
+License-File: data/linux_x64/BUILD_LICENSES/pdfium.txt
+License-File: data/linux_x64/BUILD_LICENSES/simdutf.txt
+License-File: data/linux_x64/BUILD_LICENSES/zlib.txt
 Dynamic: license
 Dynamic: license-file
 Dynamic: requires-python
@@ -59,6 +47,10 @@ Dynamic: summary
 
 <!-- SPDX-FileCopyrightText: 2026 geisserml <geisserml@gmail.com> -->
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
+
+> [!IMPORTANT]
+> **AI-"assisted" issues and PRs are banned from this project!**
+> [See below.](#no-ai-issues-and-prs-policy)
 
 # pypdfium2
 
@@ -68,7 +60,7 @@ pypdfium2 is an ABI-level Python 3 binding to [PDFium](https://pdfium.googlesour
 
 It is built with [ctypesgen](https://github.com/pypdfium2-team/ctypesgen) and external [PDFium binaries](https://github.com/bblanchon/pdfium-binaries/).
 The custom setup infrastructure provides a seamless packaging and installation process.
-A wide range of platforms is supported with pre-built packages.
+A wide range of platforms is covered with pre-built packages. Check out our [platform support page](https://pypdfium2-team.github.io/pypdfium2/platforms.html).
 
 pypdfium2 includes [helpers](#support-model) to simplify common use cases, while the [raw PDFium API](#raw-pdfium-api) (ctypes) remains accessible as well.
 
@@ -131,6 +123,12 @@ Python dependencies should be automatically installed, unless `--no-build-isolat
 > pypdfium2 and its ctypesgen fork are developed in sync, i.e. each pypdfium2 commit ought to be coupled with the then `HEAD` of pypdfium2-ctypesgen.<br>
 > Our release sdists, and latest pypdfium2 from git, will automatically use matching ctypesgen.<br>
 > However, when using a non-latest commit, you'll have to set up the right ctypesgen version on your own, and install pypdfium2 without build isolation.
+
+> [!CAUTION]
+> **ctypesgen works best on Linux.**
+> Caution is advised when building bindings natively on other OSes.<br>
+> In particular, there have been some known bindings generation issues on Windows, when system headers are involved.
+> Consider opting into the [reference bindings](autorelease/bindings.py) via `PDFIUM_BINDINGS=reference`.
 
 #### Get the code
 
@@ -223,7 +221,7 @@ Dependencies:
 - When building with system tools, `gn (generate-ninja)`, `ninja`, and a compiler are needed. If available, the compiler defaults to GCC, but Clang should also work if you set up some symlinks, and make sure you have the `libclang_rt` builtins or pass `--no-libclang-rt`.
 
 > [!IMPORTANT]
-> PDFium requires recent GN. Outdated GN may fail with the most obscure errors.<br/>
+> PDFium requires recent GN. Outdated GN may fail with the most obscure errors.<br>
 > With `build_native.py`, we recommend that you install [`gn-dist`](https://github.com/pypdfium2-team/gn-dist/) from PyPI, which is also maintained by pypdfium2-team:
 > ```bash
 > python3 -m pip install -r req/gn.txt
@@ -508,7 +506,7 @@ Disclaimer: As it is hard to keep up with constantly evolving setup code, it is 
 + To set up channels in a GH workflow
   ```yaml
   - name: ...
-    uses: conda-incubator/setup-miniconda@v3
+    uses: conda-incubator/setup-miniconda@v4  # or pin to hash
     with:
       # ... your options
       channels: pypdfium2-team,bblanchon
@@ -999,8 +997,7 @@ If you wish to call pypdfium2's CLI through `python -m`, note that the module na
 ## Licensing
 
 > [!NOTE]
-> *Disclaimer: This project is provided on an "as-is" basis. This is not legal advice, and there is ABSOLUTELY NO WARRANTY for any information provided in this document or elsewhere in the pypdfium2 project, including earlier revisions.*
-> *We disclaim liability for any possible damages resulting from using this license information. It is the embedder's responsibility to check on licensing.*
+> __Disclaimer:__ *This project is provided on an "as-is" basis. This is not legal advice, and there is absolutely no warranty. Please check relevant licenses on your own.*
 > *See also [GitHub's disclaimer](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/licensing-a-repository#disclaimer).*
 
 pypdfium2 itself is available by the terms and conditions of [`Apache-2.0`](LICENSES/Apache-2.0.txt) / [`BSD-3-Clause`](LICENSES/BSD-3-Clause.txt).
@@ -1040,10 +1037,20 @@ Roadmap:
 * [pdfium-binaries](https://github.com/bblanchon/pdfium-binaries/issues): Binary builder.
 * [ctypesgen](https://github.com/pypdfium2-team/ctypesgen/issues): Bindings generator (fork). See also [upstream](https://github.com/ctypesgen/ctypesgen/issues).
 
+### No AI issues and PRs policy
+
+AI issues and PRs are banned from this project.
+
+Any issues or PRs that exhibit the typical characteristics of low-quality generative AI will be labelled as `spam / ai` and closed/locked immediately, no matter how important they may claim to be.
+
+Our issue and PR templates make it quite plain that AI is not allowed, so users who violate this policy should not be surprised to find themselves blocked.
+
+[This announcement](https://github.com/pypdfium2-team/pypdfium2/discussions/449) offers some more background as to why this decision was reached.
+
 ### Response policy
 <!-- Inspired by bluesky's contribution rules: https://github.com/bluesky-social/indigo -->
 
-Given this is a volunteer open-source project, it is possible you may not get a response to your issue, or it may be closed without much feedback. Conversations may be locked if we feel like our attention is getting DDOSed. We may not have time to provide usage support.
+Given this is a volunteer open-source project, it is possible you may not get a response to your issue, or it may be closed without much feedback. Conversations may be locked if we feel like our attention is getting DDOSed. We may not have time to provide much usage support.
 
 The same applies to Pull Requests. We will accept contributions only if we find them suitable. Do not reach out with a strong expectation to get your change merged; it is solely up to the repository owner to decide if and when a PR will be merged, and we are free to silently reject PRs we do not like.
 
@@ -1219,11 +1226,12 @@ This results in pypdfium2 being part of a large dependency tree.
 * [Benoît Blanchon](https://github.com/bblanchon): Author/Maintainer of [PDFium binaries](https://github.com/bblanchon/pdfium-binaries/) and [patches](https://github.com/bblanchon/pdfium-binaries/tree/master/patches).
 * [Yinlin Hu](https://github.com/YinlinHu): `pypdfium` prototype and `kuafu` PDF viewer.
 * [Mike Kroutikov](https://github.com/mkroutikov): Examples on how to use PDFium from Python in `redstork`, `redstork-ui` and `pdfbrain`.
-* [Tim Head](https://github.com/betatim): Original idea for Python bindings to PDFium with ctypesgen in `wowpng`.
-* [Adam Huganir](https://github.com/adam-huganir): Help with maintenance and development decisions since the beginning of the project.
+* [Matthieu Darbois](http://github.com/mayeut): Provider of static clang images – native performance builds in otherwise qemu-driven containers. Help with bypassing `libclang_rt` dependency.
+* [wojiushixiaobai](https://github.com/wojiushixiaobai): Helpful pointers and draft workflow for cibuildwheel. Supporting extra Linux architectures via emulated containers.
 * [Christian Heimes](https://github.com/tiran): RPM packaging for pdfium. Showing how to build pdfium natively without Google's toolchain.
 * [Marvin Gießing](https://github.com/mgiessing): Investigation on building PDFium for a then unhandled Linux architecture (ppc64le).
-* [wojiushixiaobai](https://github.com/wojiushixiaobai): Helpful pointers and draft workflow for cibuildwheel. Supporting extra Linux architectures via emulated containers.
+* [Adam Huganir](https://github.com/adam-huganir): Help with maintenance and development decisions since the beginning of the project.
+* [Tim Head](https://github.com/betatim): Original idea for Python bindings to PDFium with ctypesgen in `wowpng`.
 * [kobaltcore](https://github.com/kobaltcore): Bug fix for `PdfDocument.save()`.
 * [Anderson Bravalheri](https://github.com/abravalheri): Help with PEP 517/518 compliance. Hint to use an environment variable rather than separate setup files.
 * [Bastian Germann](https://github.com/bgermann): Help with inclusion of licenses for third-party components of PDFium.
